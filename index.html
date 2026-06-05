@@ -1,0 +1,2423 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AIGC 水印与 3DGS 论文 Wiki</title>
+  <style>
+    :root {
+      --paper: #080d0b;
+      --ink: #edf7f2;
+      --muted: #96aaa2;
+      --line: rgba(130, 219, 202, .18);
+      --teal: #56d6c4;
+      --blue: #8db7ff;
+      --red: #ff8f87;
+      --amber: #ffc269;
+      --green: #73e28a;
+      --panel: rgba(14, 25, 22, .92);
+      --shadow: 0 22px 70px rgba(0, 0, 0, .34);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(rgba(86, 214, 196, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(86, 214, 196, .045) 1px, transparent 1px),
+        radial-gradient(circle at 18% 0%, rgba(86, 214, 196, .16), transparent 34%),
+        radial-gradient(circle at 92% 10%, rgba(141, 183, 255, .12), transparent 30%),
+        var(--paper);
+      background-size: 32px 32px, 32px 32px, auto, auto, auto;
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+      background: rgba(247, 245, 239, 0.86);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(11, 119, 111, .9), rgba(36, 87, 166, .85)),
+        radial-gradient(circle at 70% 30%, #fff 0 8%, transparent 9%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+      flex: 0 0 auto;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-links a,
+    .chip,
+    .select,
+    .search {
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 250, .74);
+      border-radius: 8px;
+      color: var(--muted);
+    }
+
+    .nav-links a {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .hero {
+      padding: 42px 0 26px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr);
+      gap: 34px;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: clamp(36px, 5.6vw, 70px);
+      line-height: .98;
+      margin: 0 0 18px;
+      max-width: 850px;
+      letter-spacing: 0;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 740px;
+      color: #3f463f;
+      font-size: 18px;
+    }
+
+    .meta-row {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--teal);
+    }
+
+    .visual {
+      background: #fffdfa;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+
+    #mapCanvas {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      display: block;
+      border-radius: 6px;
+      background: #fbfaf6;
+    }
+
+    .section {
+      padding: 34px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      margin: 0;
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 14px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .summary-block {
+      border-top: 3px solid var(--teal);
+      padding: 14px 0 0;
+    }
+
+    .summary-block:nth-child(2) { border-color: var(--blue); }
+    .summary-block:nth-child(3) { border-color: var(--amber); }
+
+    .summary-block h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .summary-block p {
+      margin: 0;
+      color: #41463f;
+      font-size: 15px;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .year-col {
+      border-left: 3px solid var(--line);
+      padding: 0 0 0 12px;
+      min-height: 130px;
+    }
+
+    .year-col strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .year-col p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    #tech-tree {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(124, 190, 177, .08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 190, 177, .08) 1px, transparent 1px),
+        linear-gradient(135deg, #0f1512 0%, #171613 58%, #1b1914 100%);
+      background-size: 28px 28px, 28px 28px, auto;
+      color: #eef7f3;
+      border-bottom: 0;
+    }
+
+    #tech-tree::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 0%, rgba(12, 119, 111, .16) 48%, transparent 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 30%);
+      pointer-events: none;
+    }
+
+    #tech-tree .shell {
+      position: relative;
+      z-index: 1;
+    }
+
+    #tech-tree .section-head h2 {
+      color: #f8fffb;
+      text-shadow: 0 0 24px rgba(52, 198, 179, .22);
+    }
+
+    #tech-tree .section-note {
+      color: #b8c9c1;
+    }
+
+    .tree-wrap {
+      display: grid;
+      grid-template-columns: 315px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .tree-root {
+      position: sticky;
+      top: 86px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .035)),
+        rgba(14, 24, 21, .92);
+      border: 1px solid rgba(126, 219, 202, .28);
+      border-radius: 8px;
+      box-shadow: 0 26px 80px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .12);
+      padding: 18px;
+    }
+
+    .core-visual {
+      position: relative;
+      min-height: 152px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(126, 219, 202, .22);
+      border-radius: 8px;
+      background:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px),
+        rgba(8, 17, 15, .62);
+      background-size: 18px 18px;
+      overflow: hidden;
+    }
+
+    .core-visual::before,
+    .core-visual::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 118px;
+      height: 118px;
+      border: 1px solid rgba(126, 219, 202, .32);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .core-visual::after {
+      width: 72px;
+      height: 72px;
+      border-color: rgba(242, 177, 75, .44);
+      box-shadow: 0 0 34px rgba(52, 198, 179, .18);
+    }
+
+    .core-node {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: grid;
+      place-items: center;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: #10231f;
+      border: 1px solid rgba(126, 219, 202, .54);
+      color: #eafff8;
+      font-weight: 800;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    .core-step {
+      position: absolute;
+      padding: 5px 7px;
+      border: 1px solid rgba(126, 219, 202, .26);
+      border-radius: 8px;
+      color: #bff0e4;
+      background: rgba(9, 18, 16, .78);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .core-step:nth-child(2) { left: 10px; top: 14px; }
+    .core-step:nth-child(3) { right: 10px; top: 14px; color: #ffdca1; }
+    .core-step:nth-child(4) { left: 14px; bottom: 14px; color: #c7d8ff; }
+    .core-step:nth-child(5) { right: 14px; bottom: 14px; color: #c9f5cb; }
+
+    .tree-root h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+      color: #f7fffb;
+    }
+
+    .tree-root p {
+      margin: 0;
+      color: #b8c9c1;
+      font-size: 14px;
+    }
+
+    .tree {
+      display: grid;
+      gap: 14px;
+      position: relative;
+    }
+
+    .tree::before {
+      content: "";
+      position: absolute;
+      left: -14px;
+      top: 18px;
+      bottom: 18px;
+      width: 2px;
+      background: linear-gradient(180deg, transparent, rgba(126, 219, 202, .78), rgba(242, 177, 75, .68), transparent);
+      box-shadow: 0 0 18px rgba(52, 198, 179, .34);
+    }
+
+    .branch {
+      position: relative;
+      background:
+        linear-gradient(90deg, rgba(126, 219, 202, .11), transparent 34%),
+        rgba(248, 253, 249, .955);
+      border: 1px solid rgba(126, 219, 202, .22);
+      border-radius: 8px;
+      padding: 15px 15px 14px 66px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, .18);
+    }
+
+    .branch::before {
+      content: "";
+      position: absolute;
+      left: -14px;
+      top: 29px;
+      width: 14px;
+      height: 2px;
+      background: rgba(126, 219, 202, .78);
+      box-shadow: 0 0 12px rgba(52, 198, 179, .48);
+    }
+
+    .branch-index {
+      position: absolute;
+      left: 14px;
+      top: 15px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #10231f;
+      color: #bff0e4;
+      border: 1px solid rgba(11, 119, 111, .38);
+      font-weight: 850;
+      box-shadow: 0 0 22px rgba(11, 119, 111, .22);
+    }
+
+    .branch-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .branch h3 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.3;
+      color: #111a16;
+    }
+
+    .branch p {
+      margin: 0 0 10px;
+      color: #2f3d37;
+      font-size: 14px;
+    }
+
+    .branch ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #38463f;
+      font-size: 13px;
+    }
+
+    .branch li { margin: 4px 0; }
+
+    .branch-links {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .branch-links a,
+    .branch-filter {
+      border: 1px solid rgba(11, 119, 111, .2);
+      border-radius: 8px;
+      background: #f8fffb;
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 6px 9px;
+      cursor: pointer;
+      font: inherit;
+      line-height: 1.2;
+    }
+
+    .branch-filter {
+      color: var(--teal);
+      background: #ecfbf5;
+    }
+
+    .idea-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .idea {
+      border: 1px solid rgba(126, 219, 202, .2);
+      border-top: 3px solid rgba(126, 219, 202, .72);
+      border-radius: 8px;
+      padding: 11px 10px;
+      color: #bdd0c8;
+      background: rgba(11, 20, 18, .72);
+      font-size: 13px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .idea strong {
+      display: block;
+      color: #f4fffb;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(132px, .7fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .search,
+    .select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+    }
+
+    .search:focus,
+    .select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(11, 119, 111, .14);
+    }
+
+    .countline {
+      min-height: 30px;
+      color: var(--muted);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .paper-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .paper {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      min-height: 210px;
+    }
+
+    .paper.focus {
+      border-color: rgba(11, 119, 111, .55);
+      box-shadow: inset 4px 0 0 rgba(11, 119, 111, .72);
+    }
+
+    .paper-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .paper h3 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.28;
+    }
+
+    .badge {
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef5f4;
+      color: var(--teal);
+      white-space: nowrap;
+      border: 1px solid rgba(11,119,111,.16);
+    }
+
+    .badge.core { background: #fff4de; color: #8a530a; border-color: rgba(183,121,31,.24); }
+    .badge.new { background: #eff4ff; color: var(--blue); border-color: rgba(36,87,166,.24); }
+    .badge.attack { background: #fff0ef; color: var(--red); border-color: rgba(166,66,59,.24); }
+    .badge.struct { background: #eef8ef; color: var(--green); border-color: rgba(52,122,70,.24); }
+    .badge.candidate { background: rgba(150,170,162,.12); color: #9fb4ad; border-color: rgba(150,170,162,.24); }
+
+    .code-badge {
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 800;
+      background: rgba(86, 214, 196, .13);
+      color: #8ff4e3;
+      border: 1px solid rgba(86, 214, 196, .34);
+      white-space: nowrap;
+    }
+
+    .code-badge.missing {
+      background: rgba(150,170,162,.09);
+      color: #8ea39b;
+      border-color: rgba(150,170,162,.16);
+    }
+
+    .paper.repro {
+      border-color: rgba(86, 214, 196, .38);
+    }
+
+    .paper.no-code.focus {
+      border-color: rgba(150, 170, 162, .22);
+      box-shadow: inset 4px 0 0 rgba(150,170,162,.32), var(--shadow);
+    }
+
+    .paper-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 3px 7px;
+      background: #fbfaf6;
+    }
+
+    .paper p {
+      margin: 0;
+      color: #424740;
+      font-size: 14px;
+    }
+
+    .paper a {
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 13px;
+      width: fit-content;
+    }
+
+    .routes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .route {
+      border-left: 3px solid var(--blue);
+      padding-left: 14px;
+    }
+
+    .route:nth-child(2) { border-color: var(--teal); }
+    .route:nth-child(3) { border-color: var(--red); }
+
+    .route h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .route ol {
+      margin: 0;
+      padding-left: 20px;
+      color: #41463f;
+      font-size: 14px;
+    }
+
+    footer {
+      padding: 28px 0 42px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid,
+      .summary,
+      .routes,
+      .paper-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .timeline {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .tree-wrap,
+      .idea-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .tree-root {
+        position: static;
+      }
+
+      .branch {
+        padding-left: 58px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 22px, 1180px); }
+      .nav { height: auto; padding: 12px 0; align-items: flex-start; }
+      .brand { max-width: 52%; }
+      .nav-links { gap: 6px; }
+      .nav-links a { padding: 7px 8px; }
+      .hero { padding-top: 28px; }
+      .controls { grid-template-columns: 1fr; }
+      .timeline { grid-template-columns: 1fr; }
+      h1 { font-size: 38px; }
+      .branch-head { align-items: flex-start; }
+      .branch h3 { font-size: 16px; }
+      .core-visual { min-height: 138px; }
+    }
+
+    .topbar {
+      background: rgba(8, 13, 11, .84);
+      border-bottom-color: rgba(130, 219, 202, .16);
+      box-shadow: 0 14px 44px rgba(0, 0, 0, .22);
+    }
+
+    .brand-mark {
+      background:
+        linear-gradient(135deg, rgba(86, 214, 196, .9), rgba(141, 183, 255, .86)),
+        radial-gradient(circle at 70% 30%, #fff 0 8%, transparent 9%);
+    }
+
+    .nav-links a,
+    .chip,
+    .select,
+    .search {
+      background: rgba(16, 27, 24, .82);
+      border-color: rgba(130, 219, 202, .18);
+      color: #c6d8d1;
+    }
+
+    .nav-links a:hover,
+    .branch-links a:hover,
+    .branch-filter:hover,
+    .paper a:hover {
+      border-color: rgba(86, 214, 196, .55);
+      box-shadow: 0 0 0 3px rgba(86, 214, 196, .08);
+    }
+
+    .hero {
+      border-bottom-color: rgba(130, 219, 202, .15);
+    }
+
+    .lede,
+    .section-note,
+    .summary-block p,
+    .year-col p,
+    .route ol,
+    .countline,
+    footer {
+      color: var(--muted);
+    }
+
+    .visual,
+    .paper,
+    .route {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.022)),
+        rgba(12, 22, 20, .92);
+      border-color: rgba(130, 219, 202, .18);
+      box-shadow: var(--shadow);
+    }
+
+    #mapCanvas {
+      background: #0a1110;
+    }
+
+    .section {
+      border-bottom-color: rgba(130, 219, 202, .14);
+    }
+
+    .summary-block {
+      border-top-color: rgba(86, 214, 196, .78);
+    }
+
+    .summary-block:nth-child(2) { border-color: rgba(141, 183, 255, .8); }
+    .summary-block:nth-child(3) { border-color: rgba(255, 194, 105, .82); }
+
+    .year-col {
+      border-left-color: rgba(130, 219, 202, .18);
+    }
+
+    .search,
+    .select {
+      color: var(--ink);
+    }
+
+    .search::placeholder {
+      color: #789089;
+    }
+
+    .paper {
+      color: var(--ink);
+    }
+
+    .paper.focus {
+      border-color: rgba(86, 214, 196, .54);
+      box-shadow: inset 4px 0 0 rgba(86, 214, 196, .76), var(--shadow);
+    }
+
+    .paper h3,
+    .route h3,
+    .summary-block h3,
+    .year-col strong {
+      color: #f5fffb;
+    }
+
+    .paper p {
+      color: #c4d4ce;
+    }
+
+    .pill {
+      background: rgba(255,255,255,.045);
+      border-color: rgba(130, 219, 202, .16);
+      color: #bed0c9;
+    }
+
+    .badge {
+      background: rgba(86, 214, 196, .11);
+      color: #87eadb;
+      border-color: rgba(86, 214, 196, .24);
+    }
+
+    .badge.core { background: rgba(255, 194, 105, .13); color: #ffd48f; border-color: rgba(255, 194, 105, .28); }
+    .badge.new { background: rgba(141, 183, 255, .13); color: #bad2ff; border-color: rgba(141, 183, 255, .28); }
+    .badge.attack { background: rgba(255, 143, 135, .13); color: #ffb0aa; border-color: rgba(255, 143, 135, .28); }
+    .badge.struct { background: rgba(115, 226, 138, .13); color: #a5efb2; border-color: rgba(115, 226, 138, .28); }
+
+    .branch {
+      background:
+        linear-gradient(90deg, rgba(86, 214, 196, .12), transparent 38%),
+        rgba(12, 22, 20, .96);
+      border-color: rgba(130, 219, 202, .2);
+    }
+
+    .branch h3,
+    .branch p,
+    .branch ul {
+      color: #d9e7e1;
+    }
+
+    .branch h3 {
+      color: #f8fffb;
+    }
+
+    .branch-links a,
+    .branch-filter {
+      background: rgba(255,255,255,.045);
+      border-color: rgba(130, 219, 202, .2);
+      color: #bcd3ff;
+    }
+
+    .branch-filter {
+      color: #90f1e3;
+      background: rgba(86, 214, 196, .08);
+    }
+
+    .tree-paper {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .tree-paper.has-code {
+      border-color: rgba(86, 214, 196, .36);
+      color: #d7fffb;
+    }
+
+    .tree-paper.no-tree-code {
+      color: #9fb4ad;
+      border-color: rgba(150, 170, 162, .16);
+    }
+
+    .mini-code {
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: 0;
+      background: rgba(86, 214, 196, .15);
+      color: #87f4e1;
+      border: 1px solid rgba(86, 214, 196, .28);
+    }
+
+    .mini-code.missing {
+      background: rgba(150, 170, 162, .08);
+      color: #91a79f;
+      border-color: rgba(150, 170, 162, .14);
+    }
+
+    .paper a {
+      color: #9ec3ff;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell nav">
+      <a class="brand" href="#top" aria-label="AIGC Watermark Wiki">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>AIGC 水印论文 Wiki</span>
+      </a>
+      <nav class="nav-links" aria-label="页面导航">
+        <a href="#overview">综述</a>
+        <a href="#tech-tree">技术树</a>
+        <a href="#papers">论文库</a>
+        <a href="#routes">阅读路线</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div>
+          <h1>视觉 AIGC 水印、3DGS 保护与三维生成论文图谱</h1>
+          <p class="lede">按年份、顶会和技术类型整理计算机视觉方向的水印与 3DGS 论文。重点覆盖 3D Gaussian Splatting 水印，同时收录二维图像水印、生成式图像水印、NeRF/辐射场水印、攻击检测与 3DGS 基础技术。</p>
+          <div class="meta-row">
+            <span class="chip"><span class="dot"></span>数据更新：2026-06-05</span>
+            <span class="chip"><span class="dot" style="background:var(--blue)"></span><span id="paperTotal">0</span> 篇首版收录</span>
+            <span class="chip"><span class="dot" style="background:var(--amber)"></span>CVPR / ICCV / ECCV 优先</span>
+          </div>
+        </div>
+        <div class="visual" aria-label="论文方向分布图">
+          <canvas id="mapCanvas" width="720" height="450"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="overview">
+      <div class="shell">
+        <div class="section-head">
+          <h2>综述脉络</h2>
+          <p class="section-note">水印研究正在从“给单张图片藏比特”走向“给生成过程、模型参数、三维资产和跨视角渲染链路建立可验证来源”。</p>
+        </div>
+        <div class="summary">
+          <article class="summary-block">
+            <h3>二维图像水印是方法底座</h3>
+            <p>HiDDeN 和 StegaStamp 奠定了端到端编码器-解码器、可微失真层、物理拍摄鲁棒性等范式。后续方法开始强调局部盗用、几何变换、扩散再生成、对抗攻击和可证明鲁棒性。</p>
+          </article>
+          <article class="summary-block">
+            <h3>AIGC 水印转向生成过程</h3>
+            <p>Stable Signature、Gaussian Shading、LaWa、SEAL、TAG-WM、ClusterMark 等把水印放进扩散潜空间、初始噪声、文本编码器或自回归视觉 token，使检测与归因更贴近生成链路。</p>
+          </article>
+          <article class="summary-block">
+            <h3>3DGS 水印成为新焦点</h3>
+            <p>3DGS 资产有模型文件可复制、渲染视角多、编辑与压缩链路复杂等问题。GuardSplat、3D-GSW、GS-Marker、W2M、BitC-3DGS 正在围绕容量、鲁棒性、可见质量和威胁模型展开竞争。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-head">
+          <h2>时间线</h2>
+          <p class="section-note">从通用深度水印到 NeRF/3DGS 资产保护，研究对象从图片扩展到生成模型和三维场景表示。</p>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+    <section class="section" id="tech-tree">
+      <div class="shell">
+        <div class="section-head">
+          <h2>3DGS 转换形式技术树</h2>
+          <p class="section-note">核心问题不是“把 bit 塞进哪个参数”，而是先把无序 Gaussian 集合转成可学习、可对齐、可复用的结构，再把 2D 图像水印、序列建模、图网络、分割和生成式水印迁移进来。</p>
+        </div>
+        <div class="tree-wrap">
+          <aside class="tree-root">
+            <div class="core-visual" aria-hidden="true">
+              <span class="core-node">3DGS</span>
+              <span class="core-step">无序 splats</span>
+              <span class="core-step">结构化</span>
+              <span class="core-step">2D / Graph / Seq</span>
+              <span class="core-step">Watermark</span>
+            </div>
+            <h3>根问题：无序 3DGS 如何变成稳定水印载体？</h3>
+            <p>MarkSplatter 的启发在于：一旦把 3DGS 规则化为 Splatter Image，通用网络就可以一次前向传播完成任意模型、任意消息的嵌入。下面这些分支都是沿着“结构化 3DGS”继续发散。</p>
+          </aside>
+          <div>
+            <div id="techTree" class="tree"></div>
+            <div class="idea-strip">
+              <div class="idea"><strong>图像化</strong>把 Gaussian 映射为像素/UV/latent tensor，借 2D watermark 与 encoder-decoder。</div>
+              <div class="idea"><strong>图结构化</strong>用空间邻近、共可见、遮挡和语义边，找稳定 Gaussian 子图。</div>
+              <div class="idea"><strong>序列化</strong>用八叉树、Morton/Hilbert 编码或 learnable sorting 建 canonical order。</div>
+              <div class="idea"><strong>视角一致</strong>选择多视角稳定可见、贡献稳定的 Gaussian 作为承载区域。</div>
+              <div class="idea"><strong>攻击不变量</strong>从压缩、编辑、重训练和 diffusion editing 后仍保留的结构反推水印位置。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="papers">
+      <div class="shell">
+        <div class="section-head">
+          <h2>论文库</h2>
+          <p class="section-note">“重点”标记优先给 3DGS 水印与可直接支撑 AIGC 水印研究的问题设定。预印本和期刊扩展单独保留 venue，便于后续更新顶会归属。</p>
+        </div>
+        <div class="controls" aria-label="论文筛选">
+          <input id="search" class="search" type="search" placeholder="搜索标题、关键词、会议或年份" />
+          <select id="yearFilter" class="select"></select>
+          <select id="typeFilter" class="select"></select>
+          <select id="venueFilter" class="select"></select>
+          <select id="codeFilter" class="select"></select>
+        </div>
+        <div class="countline">
+          <span id="resultCount">正在载入</span>
+          <span>优先级：有可复现代码的 3DGS 水印 > 有代码的 AIGC 水印 > 未确认代码的候选论文</span>
+        </div>
+        <div id="paperGrid" class="paper-grid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="routes">
+      <div class="shell">
+        <div class="section-head">
+          <h2>阅读路线</h2>
+          <p class="section-note">面向做 AIGC 水印和 3DGS 水印的研究准备，三条线可以并行推进。</p>
+        </div>
+        <div class="routes">
+          <article class="route">
+            <h3>3DGS 水印主线</h3>
+            <ol>
+              <li>3D Gaussian Splatting</li>
+              <li>CopyRNeRF / WateRF</li>
+              <li>GuardSplat / 3D-GSW</li>
+              <li>GS-Marker / W2M / BitC-3DGS</li>
+            </ol>
+          </article>
+          <article class="route">
+            <h3>AIGC 图像水印主线</h3>
+            <ol>
+              <li>HiDDeN / StegaStamp</li>
+              <li>Stable Signature</li>
+              <li>Gaussian Shading / LaWa</li>
+              <li>SEAL / TAG-WM / ClusterMark</li>
+            </ol>
+          </article>
+          <article class="route">
+            <h3>攻防评测主线</h3>
+            <ol>
+              <li>Robust-Wide / Certifiably Robust Image Watermark</li>
+              <li>WMD / Fine-grained Watermark Removal</li>
+              <li>Decoder Gradient Shield / Decoupling Defense Strategies</li>
+              <li>Position: 3DGS Watermarking Should Be Scenario-Driven</li>
+            </ol>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      说明：本 wiki 是研究导航首版，优先引用 CVF Open Access、ECVA、arXiv 和出版社页面。论文列表保留来源链接，便于后续增补代码、数据集、攻击设置和指标表。
+    </div>
+  </footer>
+
+  <script>
+    const papers = [
+      {
+        year: 2018,
+        venue: "ECCV",
+        type: "二维图像水印",
+        status: "基础",
+        title: "HiDDeN: Hiding Data with Deep Networks",
+        authors: "Jiren Zhu, Russell Kaplan, Justin Johnson, Li Fei-Fei",
+        note: "端到端深度隐写/水印代表作，提出编码器、噪声层、解码器联合训练范式，是后续 AIGC 图像水印常见基线。",
+        tags: ["deep watermarking", "steganography", "encoder-decoder"],
+        url: "https://openaccess.thecvf.com/content_ECCV_2018/html/Jiren_Zhu_HiDDeN_Hiding_Data_ECCV_2018_paper.html"
+      },
+      {
+        year: 2020,
+        venue: "ECCV",
+        type: "NeRF/辐射场基础",
+        status: "基础",
+        title: "NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis",
+        authors: "Ben Mildenhall, Pratul P. Srinivasan, Matthew Tancik, Jonathan T. Barron, Ravi Ramamoorthi, Ren Ng",
+        note: "神经辐射场基础论文，为后续 NeRF 水印、辐射场版权保护与 3DGS 对比提供背景。",
+        tags: ["NeRF", "novel view synthesis", "radiance field"],
+        url: "https://www.matthewtancik.com/nerf"
+      },
+      {
+        year: 2020,
+        venue: "CVPR",
+        type: "二维图像水印",
+        status: "基础",
+        title: "StegaStamp: Invisible Hyperlinks in Physical Photographs",
+        authors: "Matthew Tancik, Ben Mildenhall, Ren Ng",
+        note: "面向打印、拍摄、透视和光照变化的物理世界鲁棒隐形链接，常被用于讨论水印在真实采集链路中的可靠性。",
+        tags: ["physical robustness", "steganography", "camera capture"],
+        url: "https://openaccess.thecvf.com/content_CVPR_2020/html/Tancik_StegaStamp_Invisible_Hyperlinks_in_Physical_Photographs_CVPR_2020_paper.html"
+      },
+      {
+        year: 2020,
+        venue: "CVPR",
+        type: "二维图像水印",
+        status: "基础",
+        title: "Distortion Blind Deep Watermarking",
+        authors: "Google Research",
+        note: "强调训练时不显式建模具体失真，也能学习对多类图像处理保持鲁棒的深度水印。",
+        tags: ["distortion blind", "robustness", "deep watermarking"],
+        url: "https://research.google/pubs/distortion-blind-deep-watermarking/"
+      },
+      {
+        year: 2023,
+        venue: "SIGGRAPH / TOG",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "3D Gaussian Splatting for Real-Time Radiance Field Rendering",
+        authors: "Bernhard Kerbl, Georgios Kopanas, Thomas Leimkuehler, George Drettakis",
+        note: "3DGS 源头论文，显式高斯、密度控制、可微光栅化和实时渲染构成当前 3DGS 水印的承载对象。",
+        tags: ["3DGS", "radiance field", "real-time rendering"],
+        url: "https://arxiv.org/abs/2308.04079"
+      },
+      {
+        year: 2023,
+        venue: "ICCV",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "The Stable Signature: Rooting Watermarks in Latent Diffusion Models",
+        authors: "Pierre Fernandez, Guillaume Couairon, Herve Jegou, Matthijs Douze, Teddy Furon",
+        note: "通过微调 latent diffusion 的解码器让生成图像携带隐藏签名，是扩散模型主动水印的重要里程碑。",
+        tags: ["latent diffusion", "model watermark", "source detection"],
+        url: "https://openaccess.thecvf.com/content/ICCV2023/html/Fernandez_The_Stable_Signature_Rooting_Watermarks_in_Latent_Diffusion_Models_ICCV_2023_paper.html"
+      },
+      {
+        year: 2023,
+        venue: "ICCV",
+        type: "NeRF/辐射场水印",
+        status: "重点",
+        title: "CopyRNeRF: Protecting the CopyRight of Neural Radiance Fields",
+        authors: "Ziyuan Luo, Qing Guo, Ka Chun Cheung, Simon See, Renjie Wan",
+        note: "较早系统讨论 NeRF 模型版权保护，把水印嵌入颜色表示并从渲染视图中提取。",
+        tags: ["NeRF watermark", "copyright", "rendered views"],
+        url: "https://openaccess.thecvf.com/content/ICCV2023/papers/Luo_CopyRNeRF_Protecting_the_CopyRight_of_Neural_Radiance_Fields_ICCV_2023_paper.pdf"
+      },
+      {
+        year: 2023,
+        venue: "ICCV",
+        type: "水印攻击/检测",
+        status: "攻击",
+        title: "Fine-grained Visible Watermark Removal",
+        authors: "Li Niu, Xing Zhao, Bo Zhang, Liqing Zhang",
+        note: "可见水印去除方向代表作，对做鲁棒水印时的对手能力建模有参考价值。",
+        tags: ["watermark removal", "visible watermark", "restoration"],
+        url: "https://openaccess.thecvf.com/content/ICCV2023/html/Niu_Fine-grained_Visible_Watermark_Removal_ICCV_2023_paper.html"
+      },
+      {
+        year: 2023,
+        venue: "arXiv",
+        type: "NeRF/辐射场水印",
+        status: "相关",
+        title: "MarkNeRF: Watermarking for Neural Radiance Field",
+        authors: "arXiv preprint",
+        note: "面向隐式 3D 模型版权保护的 NeRF 水印方案，可作为 CopyRNeRF 和 WateRF 的补充阅读。",
+        tags: ["NeRF watermark", "implicit 3D", "copyright"],
+        url: "https://arxiv.org/abs/2309.11747"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models",
+        authors: "Zijin Yang, Kai Zeng, Kejiang Chen, Han Fang, Weiming Zhang, Nenghai Yu",
+        note: "训练无关、性能无损地把水印映射进扩散潜变量分布，强调可证明性质和即插即用。",
+        tags: ["diffusion watermark", "training-free", "provable"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/html/Yang_Gaussian_Shading_Provable_Performance-Lossless_Image_Watermarking_for_Diffusion_Models_CVPR_2024_paper.html"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "ProMark: Proactive Diffusion Watermarking for Causal Attribution",
+        authors: "Vishal Asnani, John Collomosse, Tu Bui, Xiaoming Liu, Shruti Agarwal",
+        note: "把训练数据概念信息以水印形式预先嵌入，用于把生成结果因果归因到训练概念、风格或对象。",
+        tags: ["causal attribution", "training data", "diffusion"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/html/Asnani_ProMark_Proactive_Diffusion_Watermarking_for_Causal_Attribution_CVPR_2024_paper.html"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "NeRF/辐射场水印",
+        status: "重点",
+        title: "WateRF: Robust Watermarks in Radiance Fields for Protection of Copyrights",
+        authors: "Youngdong Jang et al.",
+        note: "直接面向辐射场版权保护，从模型训练、被盗模型渲染和水印提取链路定义鲁棒性。",
+        tags: ["radiance field watermark", "NeRF", "copyright"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/papers/Jang_WateRF_Robust_Watermarks_in_Radiance_Fields_for_Protection_of_Copyrights_CVPR_2024_paper.pdf"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Gaussian Splatting SLAM",
+        authors: "Hidenobu Matsuki, Riku Murai, Paul H. J. Kelly, Andrew J. Davison",
+        note: "把 3DGS 引入单目/RGB-D SLAM，体现 3DGS 从离线重建走向在线空间建图。",
+        tags: ["3DGS", "SLAM", "tracking"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/html/Matsuki_Gaussian_Splatting_SLAM_CVPR_2024_paper.html"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "COLMAP-Free 3D Gaussian Splatting",
+        authors: "Yang Fu, Sifei Liu, Amey Kulkarni, Jan Kautz, Alexei A. Efros, Xiaolong Wang",
+        note: "摆脱预计算相机位姿，顺序式扩展高斯集合，对低门槛 3DGS 资产生成与水印部署很关键。",
+        tags: ["pose-free", "3DGS", "reconstruction"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/html/Fu_COLMAP-Free_3D_Gaussian_Splatting_CVPR_2024_paper.html"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis",
+        authors: "Zhan Li, Zhang Chen, Zhong Li, Yi Xu",
+        note: "动态场景 3DGS 表示，时间维度和运动参数让视频/4D 水印威胁模型更复杂。",
+        tags: ["dynamic 3DGS", "4D", "real-time"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/html/Li_Spacetime_Gaussian_Feature_Splatting_for_Real-Time_Dynamic_View_Synthesis_CVPR_2024_paper.html"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "4D Gaussian Splatting for Real-Time Dynamic Scene Rendering",
+        authors: "CVPR 2024",
+        note: "动态 3DGS/4DGS 重要分支，适合为未来动态场景水印、时序鲁棒性和视频编辑攻击做背景阅读。",
+        tags: ["4DGS", "dynamic scene", "rendering"],
+        url: "https://openaccess.thecvf.com/content/CVPR2024/papers/Wu_4D_Gaussian_Splatting_for_Real-Time_Dynamic_Scene_Rendering_CVPR_2024_paper.pdf"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Triplane Meets Gaussian Splatting: Fast and Generalizable Single-View 3D Reconstruction with Transformers",
+        authors: "CVPR 2024",
+        note: "单图到 3DGS 的泛化重建方向，和 AIGC 2D-to-3D 资产生成场景直接相关。",
+        tags: ["single-view 3D", "transformer", "3DGS"],
+        url: "https://cvpr.thecvf.com/virtual/2024/poster/31585"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "pixelSplat: 3D Gaussian Splats from Image Pairs for Scalable Generalizable 3D Reconstruction",
+        authors: "David Charatan et al.",
+        note: "从图像对前馈预测 3D 高斯，代表泛化 3DGS 重建技术路线。",
+        tags: ["generalizable 3DGS", "image pairs", "feed-forward"],
+        url: "https://arxiv.org/abs/2312.12337"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "MVSplat: Efficient 3D Gaussian Splatting from Sparse Multi-View Images",
+        authors: "Yuedong Chen et al.",
+        note: "稀疏多视图到 3DGS 的高效方法，是研究低视角/稀疏输入水印可迁移性的好背景。",
+        tags: ["sparse-view", "multi-view", "3DGS"],
+        url: "https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/03187.pdf"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Analytic-Splatting: Anti-Aliased 3D Gaussian Splatting via Analytic Integration",
+        authors: "ECCV 2024 Oral",
+        note: "从抗混叠和解析积分角度改进渲染质量，影响渲染域水印的频域/尺度稳定性。",
+        tags: ["anti-aliasing", "rendering", "3DGS"],
+        url: "https://eccv2024.ecva.net/virtual/2024/oral/1224"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "latentSplat: Autoencoding Variational Gaussians for Fast Generalizable 3D Reconstruction",
+        authors: "ECCV 2024",
+        note: "把高斯表示放入潜空间/生成式解码框架，连接 3DGS 与生成模型。",
+        tags: ["latent 3DGS", "generative 3D", "autoencoder"],
+        url: "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/11950_ECCV_2024_paper.php"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "LaWa: Using Latent Space for In-Generation Image Watermarking",
+        authors: "Ahmad Rezaei, Mohammad Akbari, Saeed Ranjbar Alvar, Arezou Fatemi, Yong Zhang",
+        note: "利用 LDM 自动编码器潜空间做生成中水印，兼顾鲁棒性、质量和低复杂度。",
+        tags: ["latent watermark", "LDM", "in-generation"],
+        url: "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/12460_ECCV_2024_paper.php"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "水印攻击/检测",
+        status: "攻击",
+        title: "Robust-Wide: Robust Watermarking against Instruction-driven Image Editing",
+        authors: "Runyi Hu, Jie Zhang, Ting Xu, Jiwei Li, Tianwei Zhang",
+        note: "针对 InstructPix2Pix 等指令编辑造成的语义级变形，训练更语义稳健的图像水印。",
+        tags: ["image editing", "semantic attack", "robust watermark"],
+        url: "https://eccv.ecva.net/virtual/2024/poster/2517"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "水印攻击/检测",
+        status: "攻击",
+        title: "Certifiably Robust Image Watermark",
+        authors: "Zhengyuan Jiang, Moyang Guo, Yuepeng Hu, Jinyuan Jia, Neil Zhenqiang Gong",
+        note: "把随机平滑引入水印，给删除和伪造攻击下的鲁棒性提供证书。",
+        tags: ["certified robustness", "removal attack", "forgery attack"],
+        url: "https://eccv.ecva.net/virtual/2024/poster/1806"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "A Watermark-Conditioned Diffusion Model for IP Protection",
+        authors: "Rui Min, Sen Li, Hongyang Chen, Minhao Cheng",
+        note: "WaDiff 用用户水印作为条件输入，同时支持合成内容检测和用户归因。",
+        tags: ["WaDiff", "IP protection", "owner identification"],
+        url: "https://eccv.ecva.net/virtual/2024/poster/1062"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "二维图像水印",
+        status: "相关",
+        title: "A Secure Image Watermarking Framework with Statistical Guarantees via Adversarial Attacks on Secret Key Networks",
+        authors: "ECCV 2024",
+        note: "基于秘密密钥网络和对抗优化嵌入水印，强调统计安全保证。",
+        tags: ["secret key network", "statistical guarantee", "PGD"],
+        url: "https://eccv.ecva.net/virtual/2024/poster/1448"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "水印攻击/检测",
+        status: "攻击",
+        title: "Finding a Needle in a Haystack: A Black-Box Approach to Invisible Watermark Detection",
+        authors: "ECCV 2024",
+        note: "WMD 在黑盒、无标注设定下检测隐形水印，适合研究水印检测器被动发现能力。",
+        tags: ["black-box detection", "invisible watermark", "forensics"],
+        url: "https://eccv.ecva.net/virtual/2024/poster/2547"
+      },
+      {
+        year: 2024,
+        venue: "Journal",
+        type: "NeRF/辐射场水印",
+        status: "相关",
+        title: "RWNeRF: Robust Watermarking Scheme for Neural Radiance Fields Based on Invertible Neural Networks",
+        authors: "Computers, Materials and Continua",
+        note: "把多视图训练图像水印迁移到 NeRF 渲染结果，用 INN 做嵌入和提取。",
+        tags: ["INN", "NeRF", "multi-view"],
+        url: "https://www.sciencedirect.com/org/science/article/pii/S1546221824006258"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "3D-GSW: 3D Gaussian Splatting for Robust Watermarking",
+        authors: "Youngdong Jang, Hyunje Park, Feng Yang, Heeju Ko, Euijin Choo, Sangpil Kim",
+        note: "同时保护 3DGS 模型和渲染图像，提出频率引导 densification、梯度 mask 与 wavelet subband loss。",
+        tags: ["3DGS watermark", "frequency", "model attack"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Jang_3D-GSW_3D_Gaussian_Splatting_for_Robust_Watermarking_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "GuardSplat: Efficient and Robust Watermarking for 3D Gaussian Splatting",
+        authors: "Zixuan Chen, Guangcong Wang, Jiahao Zhu, Jianhuang Lai, Xiaohua Xie",
+        note: "CLIP 引导解码器、SH-aware message embedding 和抗失真提取，是 3DGS 水印顶会代表作。",
+        tags: ["3DGS watermark", "CLIP", "spherical harmonics"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Chen_GuardSplat_Efficient_and_Robust_Watermarking_for_3D_Gaussian_Splatting_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "二维图像水印",
+        status: "相关",
+        title: "Watermarking One for All: A Robust Watermarking Scheme Against Partial Image Theft",
+        authors: "Gaozhi Liu, Silu Cao, Zhenxing Qian, Xinpeng Zhang, Sheng Li, Wanli Peng",
+        note: "处理任意形状局部盗用和几何变换，适合借鉴到局部视角/局部模型盗用问题。",
+        tags: ["partial theft", "copyright", "geometric transform"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Liu_Watermarking_One_for_All_A_Robust_Watermarking_Scheme_Against_Partial_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "二维图像水印",
+        status: "相关",
+        title: "OmniGuard: Hybrid Manipulation Localization via Augmented Versatile Deep Image Watermarking",
+        authors: "Xuanyu Zhang et al.",
+        note: "用深度水印做混合篡改定位，强调从版权水印走向完整性/定位水印。",
+        tags: ["tamper localization", "deep image watermark", "forensics"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Zhang_OmniGuard_Hybrid_Manipulation_Localization_via_Augmented_Versatile_Deep_Image_Watermarking_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "水印攻击/检测",
+        status: "攻击",
+        title: "Decoder Gradient Shield: Provable and High-Fidelity Prevention of Gradient-Based Box-Free Watermark Removal",
+        authors: "Haonan An et al.",
+        note: "针对梯度式 box-free 水印移除，给出防御设计和高保真约束。",
+        tags: ["watermark removal", "provable defense", "gradient attack"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/An_Decoder_Gradient_Shield_Provable_and_High-Fidelity_Prevention_of_Gradient-Based_Box-Free_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPRW",
+        type: "生成式图像水印",
+        status: "相关",
+        title: "Dynamic Watermarks in Images Generated by Diffusion Models",
+        authors: "Yunzhuo Chen et al.",
+        note: "CVPR workshop 方向，面向扩散生成图像的动态水印和源模型验证。",
+        tags: ["dynamic watermark", "diffusion", "source verification"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025W/ReGenAI/html/Chen_Dynamic_watermarks_in_images_generated_by_diffusion_models_CVPRW_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "SEAL: Semantic Aware Image Watermarking",
+        authors: "Kasra Arabi, R. Teal Witter, Chinmay Hegde, Niv Cohen",
+        note: "把生成图像的语义信息嵌入噪声模式，使水印无需大型 key 字典即可验证。",
+        tags: ["semantic watermark", "noise pattern", "diffusion"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025/html/Arabi_SEAL_Semantic_Aware_Image_Watermarking_ICCV_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "二维图像水印",
+        status: "相关",
+        title: "SpecGuard: Spectral Projection-based Advanced Invisible Watermarking",
+        authors: "Inzamamul Alam, Md Tanvir Islam, Simon S. Woo, Khan Muhammad",
+        note: "频域/小波投影隐形水印，重点评估对几何、对抗和再生成失真的鲁棒性。",
+        tags: ["spectral projection", "wavelet", "regeneration attack"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025/html/Alam_SpecGuard_Spectral_Projection-based_Advanced_Invisible_Watermarking_ICCV_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "Your Text Encoder Can Be An Object-Level Watermarking Controller",
+        authors: "Naresh Kumar Devulapally et al.",
+        note: "只微调文本 token embedding，在指定对象/区域嵌入水印，提供比全图水印更细粒度的控制。",
+        tags: ["object-level watermark", "text encoder", "LDM"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025/html/Devulapally_Your_Text_Encoder_Can_Be_An_Object-Level_Watermarking_Controller_ICCV_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "TAG-WM: Tamper-Aware Generative Image Watermarking via Diffusion Inversion Sensitivity",
+        authors: "Yuzhuo Chen, Zehua Ma, Han Fang, Weiming Zhang, Nenghai Yu",
+        note: "把版权水印和定位水印联合采样，兼顾生成内容追踪、篡改区域检测和篡改后解码。",
+        tags: ["tamper-aware", "diffusion inversion", "localization"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_TAG-WM_Tamper-Aware_Generative_Image_Watermarking_via_Diffusion_Inversion_Sensitivity_ICCV_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "生成式图像水印",
+        status: "相关",
+        title: "ROAR: Reducing Inversion Error in Generative Image Watermarking",
+        authors: "Hanyi Wang, Han Fang, Shi-Lin Wang, Ee-Chien Chang",
+        note: "聚焦生成式图像水印中的反演误差，适合和 TAG-WM、Gaussian Shading 放在一起读。",
+        tags: ["inversion error", "generative watermark", "diffusion"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025/html/Wang_ROAR_Reducing_Inversion_Error_in_Generative_Image_Watermarking_ICCV_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "生成式图像水印",
+        status: "相关",
+        title: "Semantic Watermarking Reinvented: Enhancing Robustness and Generation Quality with Fourier Integrity",
+        authors: "ICCV 2025",
+        note: "用 Hermitian symmetric Fourier watermarking 改进语义水印的质量和鲁棒性，属于生成过程水印的频域分支。",
+        tags: ["semantic watermark", "Fourier", "robustness"],
+        url: "https://www.openaccess.thecvf.com/content/ICCV2025/papers/Lee_Semantic_Watermarking_Reinvented_Enhancing_Robustness_and_Generation_Quality_with_Fourier_ICCV_2025_paper.pdf"
+      },
+      {
+        year: 2025,
+        venue: "ICCV",
+        type: "二维图像水印",
+        status: "相关",
+        title: "Invisible Watermarks, Visible Gains: Steering Machine Unlearning with Bi-Level Watermarking Design",
+        authors: "Yuhao Sun, Yihua Zhang, Gaowen Liu, Hongtao Xie, Sijia Liu",
+        note: "把数据级水印用于机器遗忘控制，说明水印也可作为训练数据治理机制。",
+        tags: ["machine unlearning", "bi-level watermark", "data governance"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025/html/Sun_Invisible_Watermarks_Visible_Gains_Steering_Machine_Unlearning_with_Bi-Level_Watermarking_ICCV_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "ICCVW",
+        type: "NeRF/辐射场水印",
+        status: "相关",
+        title: "MultiNeRF: Multiple Watermark Embedding for Neural Radiance Fields",
+        authors: "ICCV Workshop 2025",
+        note: "在单个 NeRF 中嵌入多个独立水印，适合研究多用户、多授权或多版本追踪。",
+        tags: ["multiple watermarks", "NeRF", "multi-user"],
+        url: "https://openaccess.thecvf.com/content/ICCV2025W/APAI/papers/Kulthe_MultiNeRF_Multiple_Watermark_Embedding_for_Neural_Radiance_Fields_ICCVW_2025_paper.pdf"
+      },
+      {
+        year: 2025,
+        venue: "TPAMI",
+        type: "NeRF/辐射场水印",
+        status: "相关",
+        title: "The NeRF Signature: Codebook-Aided Watermarking for Neural Radiance Fields",
+        authors: "Ziyuan Luo et al.",
+        note: "把图像水印评价标准扩展到模型级 NeRF 水印，强调 codebook 辅助签名。",
+        tags: ["NeRF signature", "codebook", "model-level"],
+        url: "https://arxiv.org/abs/2502.19125"
+      },
+      {
+        year: 2025,
+        venue: "ACM MM",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "GS-Marker: Generalizable and Robust Watermarking for 3D Gaussian Splatting",
+        authors: "Lijiang Li, Jinglu Wang, Xiang Ming, Yan Lu",
+        note: "强调单次、可泛化的 3DGS 水印嵌入和渲染图像解码，不依赖每场景重训练。",
+        tags: ["generalizable", "3DGS watermark", "single-pass"],
+        url: "https://arxiv.org/abs/2503.18718"
+      },
+      {
+        year: 2025,
+        venue: "arXiv",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "MarkSplatter: Generalizable Watermarking for 3D Gaussian Splatting Model via Splatter Image Structure",
+        authors: "Xiufeng Huang, Ziyuan Luo, Qi Song, Ruofei Wang, Renjie Wan",
+        note: "用 GaussianBridge 把无结构 3D Gaussians 转为 Splatter Image 格式，支持任意消息一次前向嵌入，并用 dense segmentation 机制做鲁棒提取。",
+        tags: ["splatter image", "GaussianBridge", "single forward", "generalizable"],
+        url: "https://arxiv.org/abs/2509.00757"
+      },
+      {
+        year: 2025,
+        venue: "arXiv",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "CompMarkGS: Robust Watermarking for Compressed 3D Gaussian Splatting",
+        authors: "arXiv preprint",
+        note: "直接面向压缩后的 3DGS 表示，适合研究部署、传输和资产压缩后的水印存活率。",
+        tags: ["compressed 3DGS", "watermark robustness", "deployment"],
+        url: "https://papers.cool/arxiv/2503.12836"
+      },
+      {
+        year: 2025,
+        venue: "arXiv",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "RDSplat: Robust Watermarking Against Diffusion Editing for 3D Gaussian Splatting",
+        authors: "arXiv preprint",
+        note: "把 2D/3D diffusion editing 作为主要攻击，适合 AIGC 编辑链路下的 3DGS 水印问题设定。",
+        tags: ["diffusion editing", "3DGS watermark", "attack robustness"],
+        url: "https://arxiv.org/abs/2512.06774"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "SplatFlow: Multi-View Rectified Flow Model for 3D Gaussian Splatting Synthesis",
+        authors: "Hyojun Go et al.",
+        note: "文本条件、多视图 rectified flow 到 3DGS 生成/编辑，连接 AIGC 三维生成和 3DGS 资产。",
+        tags: ["3D generation", "rectified flow", "3DGS editing"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Go_SplatFlow_Multi-View_Rectified_Flow_Model_for_3D_Gaussian_Splatting_Synthesis_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Steepest Descent Density Control for Compact 3D Gaussian Splatting",
+        authors: "Peihao Wang et al.",
+        note: "从理论角度改进 density control，和水印嵌入位置选择、冗余高斯利用关系密切。",
+        tags: ["density control", "compact 3DGS", "optimization"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Wang_Steepest_Descent_Density_Control_for_Compact_3D_Gaussian_Splatting_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "UVGS: Reimagining Unstructured 3D Gaussian Splatting using UV Mapping",
+        authors: "Aashish Rai et al.",
+        note: "把无序高斯映射为结构化 2D 表示，给 3DGS 压缩、生成和水印迁移提供新载体。",
+        tags: ["UV mapping", "structured 3DGS", "compression"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Rai_UVGS_Reimagining_Unstructured_3D_Gaussian_Splatting_using_UV_Mapping_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Efficient Decoupled Feature 3D Gaussian Splatting via Hierarchical Compression",
+        authors: "Zhenqi Dai, Ting Liu, Yanning Zhang",
+        note: "语义特征和颜色场解耦并层次压缩，适合关注语义 3DGS 与版权信息共存。",
+        tags: ["feature 3DGS", "semantic field", "compression"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Dai_Efficient_Decoupled_Feature_3D_Gaussian_Splatting_via_Hierarchical_Compression_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Hardware-Rasterized Ray-Based Gaussian Splatting",
+        authors: "Samuel Rota Bulo et al.",
+        note: "把 ray-based 3DGS 映射到硬件光栅化管线，有助于理解部署端渲染和水印解码环境。",
+        tags: ["hardware rasterization", "RayGS", "VR/MR"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Bulo_Hardware-Rasterized_Ray-Based_Gaussian_Splatting_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "MonoSplat: Generalizable 3D Gaussian Splatting from Monocular Depth Foundation Models",
+        authors: "Yifan Liu et al.",
+        note: "借助单目深度基础模型做泛化 3DGS 重建，代表 foundation model 与 3DGS 融合趋势。",
+        tags: ["monocular depth", "foundation model", "generalizable 3DGS"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Liu_MonoSplat_Generalizable_3D_Gaussian_Splatting_from_Monocular_Depth_Foundation_Models_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "SelfSplat: Pose-Free and 3D Prior-Free Generalizable 3D Gaussian Splatting",
+        authors: "Gyeongjin Kang et al.",
+        note: "无位姿、无 3D 先验的泛化 3DGS 重建，对无控制 AIGC 资产输入场景很有参考。",
+        tags: ["pose-free", "self-supervised", "generalizable"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Kang_SelfSplat_Pose-Free_and_3D_Prior-Free_Generalizable_3D_Gaussian_Splatting_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Speedy-Splat: Fast 3D Gaussian Splatting with Sparse Pixels and Sparse Primitives",
+        authors: "Alex Hanson et al.",
+        note: "同时减少渲染成本、模型大小和训练时间，影响水印在轻量化资产中的容量与鲁棒性。",
+        tags: ["sparse primitives", "fast rendering", "compact 3DGS"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Hanson_Speedy-Splat_Fast_3D_Gaussian_Splatting_with_Sparse_Pixels_and_Sparse_CVPR_2025_paper.html"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "基础",
+        title: "Improving Gaussian Splatting with Localized Points Management",
+        authors: "Haosen Yang et al.",
+        note: "局部点管理增强静态和动态 3DGS，和水印嵌入的局部区域选择有概念关联。",
+        tags: ["localized points", "density", "3D/4DGS"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/html/Yang_Improving_Gaussian_Splatting_with_Localized_Points_Management_CVPR_2025_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "Write Where It Matters: Policy-Guided Watermarks for 3D Gaussian Splatting",
+        authors: "Nan Li, Yike Zeng, Qian Zhang, Qi Zhang, Zhiyi Pan, Wei Feng, Liang Wan",
+        note: "W2M 用强化学习策略决定在哪里、以多大强度嵌入水印，把鲁棒性和不可见性反馈直接接入每个高斯/锚点编辑。",
+        tags: ["policy-guided", "reinforcement learning", "3DGS watermark"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/papers/Li_Write_Where_It_Matters_Policy-Guided_Watermarks_for_3D_Gaussian_Splatting_CVPR_2026_paper.pdf"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "生成式图像水印",
+        status: "重点",
+        title: "ClusterMark: Towards Robust Watermarking for Autoregressive Image Generators with Visual Token Clustering",
+        authors: "Denis Lukovnikov, Andreas Mueller, Erwin Quiring, Asja Fischer",
+        note: "面向自回归图像生成器，把视觉 token 聚类用于鲁棒水印，是扩散外的新生成模型水印分支。",
+        tags: ["autoregressive image", "visual token", "in-generation watermark"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Lukovnikov_ClusterMark_Towards_Robust_Watermarking_for_Autoregressive_Image_Generators_with_Visual_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "水印攻击/检测",
+        status: "攻击",
+        title: "Decoupling Defense Strategies for Robust Image Watermarking",
+        authors: "CVPR 2026",
+        note: "从防御策略解耦角度提升图像水印鲁棒性，适合作为 2026 年攻防侧最新参考。",
+        tags: ["defense strategy", "robust image watermark", "attack"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/papers/Chen_Decoupling_Defense_Strategies_for_Robust_Image_Watermarking_CVPR_2026_paper.pdf"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "水印攻击/检测",
+        status: "相关",
+        title: "WaTeRFlow: Watermark Temporal Robustness via Flow Consistency",
+        authors: "Utae Jeong et al.",
+        note: "从光流一致性提升时间鲁棒性，适合关注视频水印和动态 3D/4DGS 渲染水印。",
+        tags: ["temporal robustness", "flow consistency", "video watermark"],
+        url: "https://openaccess.thecvf.com/CVPR2026?day=2026-06-07"
+      },
+      {
+        year: 2026,
+        venue: "arXiv",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "BitC-3DGS: High-Capacity 3D Gaussian Splatting Watermarking via Bit Compression",
+        authors: "Yuquan Bi et al.",
+        note: "针对 CLIP 77 token 上限带来的容量瓶颈，用 bit compression 支持更高容量 3DGS 水印。",
+        tags: ["high capacity", "bit compression", "3DGS watermark"],
+        url: "https://arxiv.org/abs/2605.29583"
+      },
+      {
+        year: 2026,
+        venue: "arXiv",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "Position: 3D Gaussian Splatting Watermarking Should Be Scenario-Driven and Threat-Model Explicit",
+        authors: "arXiv position paper",
+        note: "明确呼吁 3DGS 水印按场景与威胁模型定义问题，适合作为论文选题和实验设定检查表。",
+        tags: ["threat model", "scenario-driven", "position"],
+        url: "https://arxiv.org/abs/2602.02602"
+      },
+      {
+        year: 2026,
+        venue: "Pattern Recognition Letters",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "VoMarkSplat: Robust Watermarking for 3D Gaussian Splatting with Patch and Multi-Convolutional Voting",
+        authors: "Pattern Recognition Letters 2026",
+        note: "通过 patch 和多卷积投票提升单张渲染图像中的水印提取稳健性。",
+        tags: ["voting", "patch robustness", "3DGS watermark"],
+        url: "https://www.sciencedirect.com/science/article/abs/pii/S0167865526000711"
+      },
+      {
+        year: 2026,
+        venue: "Journal",
+        type: "3DGS 水印",
+        status: "相关",
+        title: "StegaGaussian: High-fidelity Steganography for 3D Gaussian Splatting Based on Frequency Decomposition",
+        authors: "Knowledge-Based Systems 2026",
+        note: "面向 3DGS 的高保真隐写，强调频率分解和比传统短 bit 水印更高的信息表达。",
+        tags: ["steganography", "frequency decomposition", "3DGS"],
+        url: "https://www.sciencedirect.com/science/article/pii/S095070512501901X"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "Urban-GS: A Unified 3D Gaussian Splatting Framework for Compact and High-Fidelity Aerial-to-Street Reconstruction",
+        authors: "Meng Wang et al.",
+        note: "面向城市级空地一体重建的紧凑高保真 3DGS，可扩展到大场景版权保护。",
+        tags: ["urban scene", "aerial-to-street", "compact 3DGS"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_Urban-GS_A_Unified_3D_Gaussian_Splatting_Framework_for_Compact_and_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "P2GS: Physical Prior-guided Gaussian Splatting for Photometrically Consistent Urban Reconstruction",
+        authors: "Kota Shimomura et al.",
+        note: "用物理先验提升城市重建光度一致性，适合关注自动驾驶/仿真中的 3DGS 资产可信性。",
+        tags: ["physical prior", "urban reconstruction", "photometric consistency"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Shimomura_P2GS_Physical_Prior-guided_Gaussian_Splatting_for_Photometrically_Consistent_Urban_Reconstruction_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "Depth Peeling for High-Fidelity Gaussian-Enhanced Surfel Rendering",
+        authors: "Keyang Ye, Hongzhi Wu, Kun Zhou",
+        note: "处理高斯增强 surfel 渲染中的层次和混叠问题，影响渲染稳定性与视觉质量。",
+        tags: ["surfel rendering", "depth peeling", "anti-aliasing"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Ye_Depth_Peeling_for_High-Fidelity_Gaussian-Enhanced_Surfel_Rendering_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "Faster-GS: Analyzing and Improving Gaussian Splatting Optimization",
+        authors: "Florian Hahlbohm, Linus Franke, Martin Eisemann, Marcus Magnor",
+        note: "系统分析 3DGS 优化中的实现和算法因素，为水印方法公平比较提供背景。",
+        tags: ["optimization", "analysis", "faster training"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Hahlbohm_Faster-GS_Analyzing_and_Improving_Gaussian_Splatting_Optimization_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "Confidence-Guided Multi-Scale Aggregation for Sparse-View High-Resolution 3D Gaussian Splatting",
+        authors: "Qinzheng Zhou et al.",
+        note: "面向稀疏视角高分辨率 3DGS，和少视角水印鲁棒提取、视角覆盖相关。",
+        tags: ["sparse-view", "high resolution", "multi-scale"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Zhou_Confidence-Guided_Multi-Scale_Aggregation_for_Sparse-View_High-Resolution_3D_Gaussian_Splatting_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "RetimeGS: Continuous-Time Reconstruction of 4D Gaussian Splatting",
+        authors: "Xuezhen Wang, Li Ma, Yulin Shen, Zeyu Wang, Pedro V. Sander",
+        note: "连续时间 4DGS 重建，适合动态 3D 内容水印和时序编辑攻击背景阅读。",
+        tags: ["4DGS", "continuous time", "dynamic scene"],
+        url: "https://openaccess.thecvf.com/content/CVPR2026/html/Wang_RetimeGS_Continuous-Time_Reconstruction_of_4D_Gaussian_Splatting_CVPR_2026_paper.html"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "ExtrinSplat: Decoupling Geometry and Semantics for Open-Vocabulary Understanding in 3D Gaussian Splatting",
+        authors: "Jiayu Ding et al.",
+        note: "开放词汇 3DGS 理解方向，提示未来水印可与语义、开放词汇资产索引结合。",
+        tags: ["open-vocabulary", "semantics", "3DGS"],
+        url: "https://openaccess.thecvf.com/CVPR2026?day=2026-06-07"
+      },
+      {
+        year: 2026,
+        venue: "CVPR",
+        type: "3DGS 基础技术",
+        status: "最新",
+        title: "Stochastic Ray Tracing for the Reconstruction of 3D Gaussian Splatting",
+        authors: "Peiyu Xu, Xin Sun, Krishna Mullia, Raymond Fei, Iliyan Georgiev, Shuang Zhao",
+        note: "从随机光线追踪角度重建 3DGS，代表渲染管线和优化算法的新探索。",
+        tags: ["ray tracing", "reconstruction", "3DGS"],
+        url: "https://iliyan.com/publications/RayTracingReconstruction/"
+      },
+      {
+        year: 2024,
+        venue: "CVPR",
+        type: "3DGS 转换形式",
+        status: "结构化启发",
+        title: "Splatter Image: Ultra-Fast Single-View 3D Reconstruction",
+        authors: "Stanislaw Szymanowicz, Christian Rupprecht, Andrea Vedaldi",
+        note: "用 2D operators 从输入图像预测 one 3D Gaussian per pixel，使 Gaussian 集合天然形成 image-like 结构；MarkSplatter 正是沿着这条结构化路线做通用水印。",
+        tags: ["Splatter Image", "image-like 3DGS", "single-view", "feed-forward"],
+        url: "https://arxiv.org/abs/2312.13150"
+      },
+      {
+        year: 2025,
+        venue: "arXiv / MIR",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "GaussianSeal: Rooting Adaptive Watermarks for 3D Gaussian Generation Model",
+        authors: "Runyi Li, Xuanyu Zhang, Chuhan Tong, Zhipei Xu, Jian Zhang",
+        note: "面向 3DGS 生成模型的 born-watermarked 路线，把 adaptive bit modulation 模块嵌入生成网络块，让生成出的 3DGS 可从渲染图解码版权 bit。",
+        tags: ["born-watermarked", "3DGS generation", "adaptive bit modulation"],
+        url: "https://arxiv.org/abs/2503.00531"
+      },
+      {
+        year: 2024,
+        venue: "NeurIPS",
+        type: "3DGS 水印",
+        status: "重点",
+        title: "GaussianMarker: Uncertainty-Aware Copyright Protection of 3D Gaussian Splatting",
+        authors: "NeurIPS 2024",
+        note: "不再直接套用 mesh/point cloud/NeRF 水印，而是利用 3DGS 参数不确定性选择更合适的嵌入区域，是“写在哪里”问题的早期关键参考。",
+        tags: ["uncertainty-aware", "copyright", "3DGS watermark"],
+        url: "https://proceedings.neurips.cc/paper_files/paper/2024/hash/39cee562b91611c16ac0b100f0bc1ea1-Abstract-Conference.html"
+      },
+      {
+        year: 2024,
+        venue: "NeurIPS",
+        type: "3DGS 转换形式",
+        status: "结构化启发",
+        title: "GaussianCut: Interactive Segmentation via Graph Cut for 3D Gaussian Splatting",
+        authors: "Umangi Jain, Ashkan Mirzaei, Igor Gilitschenski",
+        note: "把 3DGS 场景显式构造成图，并用 graph cut 分割 Gaussian 子集；它直接支持“把水印嵌进稳定 Gaussian 子图”的研究设想。",
+        tags: ["graph cut", "Gaussian graph", "segmentation", "3DGS"],
+        url: "https://proceedings.neurips.cc/paper_files/paper/2024/hash/a26f3dc32a913b77fa70c33ffa5dcb37-Abstract-Conference.html"
+      },
+      {
+        year: 2024,
+        venue: "ECCV",
+        type: "3DGS 转换形式",
+        status: "结构化启发",
+        title: "Gaussian Grouping: Segment and Edit Anything in 3D Scenes",
+        authors: "Mingqiao Ye, Martin Danelljan, Fisher Yu, Lei Ke",
+        note: "给每个 Gaussian 增加 identity/grouping 表示，把无语义 splats 组织成对象级可编辑结构；对水印区域选择和对象级归因很有启发。",
+        tags: ["Gaussian grouping", "identity encoding", "3D segmentation"],
+        url: "https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/04195.pdf"
+      },
+      {
+        year: 2023,
+        venue: "arXiv",
+        type: "3DGS 转换形式",
+        status: "结构化启发",
+        title: "Segment Any 3D Gaussians",
+        authors: "SAGA",
+        note: "把 SAM 的 2D 分割能力蒸馏进 3D Gaussian affinity features，说明 segmentation/attention 可以成为 3DGS 结构化和水印承载区域选择的工具。",
+        tags: ["SAGA", "SAM", "affinity features", "promptable segmentation"],
+        url: "https://arxiv.org/abs/2312.00860"
+      },
+      {
+        year: 2025,
+        venue: "CVPR",
+        type: "3DGS 转换形式",
+        status: "结构化启发",
+        title: "Splatter-360: Generalizable 360 Gaussian Splatting for Wide-baseline Panoramic Images",
+        authors: "CVPR 2025",
+        note: "把 Splatter-style 3DGS 扩展到全景宽基线场景，说明 image-aligned Gaussian 表示不仅适用于单物体，也能扩展到更复杂视角结构。",
+        tags: ["Splatter", "360 panorama", "generalizable 3DGS"],
+        url: "https://openaccess.thecvf.com/content/CVPR2025/papers/Chen_Splatter-360_Generalizable_360_Gaussian_Splatting_for_Wide-baseline_Panoramic_Images_CVPR_2025_paper.pdf"
+      },
+      {
+        year: 2021,
+        venue: "ICCV",
+        type: "点云/序列启发",
+        status: "结构化启发",
+        title: "Point Transformer",
+        authors: "Hengshuang Zhao, Li Jiang, Jiaya Jia, Philip H. S. Torr, Vladlen Koltun",
+        note: "直接在无序点集上做 self-attention；如果把 Gaussian 当作带属性点，空间位置编码和局部 attention 可以迁移到 message-conditioned embedding。",
+        tags: ["point cloud transformer", "self-attention", "unordered set"],
+        url: "https://openaccess.thecvf.com/content/ICCV2021/html/Zhao_Point_Transformer_ICCV_2021_paper.html"
+      },
+      {
+        year: 2022,
+        venue: "CVPR",
+        type: "点云/序列启发",
+        status: "结构化启发",
+        title: "Point-BERT: Pre-Training 3D Point Cloud Transformers With Masked Point Modeling",
+        authors: "Xumin Yu, Lulu Tang, Yongming Rao, Tiejun Huang, Jie Zhou, Jiwen Lu",
+        note: "把 masked modeling 搬到 3D 点云 token；可借鉴为 Gaussian token 的 message masking、冗余编码和鲁棒解码。",
+        tags: ["Point-BERT", "masked point modeling", "tokenization"],
+        url: "https://openaccess.thecvf.com/content/CVPR2022/html/Yu_Point-BERT_Pre-Training_3D_Point_Cloud_Transformers_With_Masked_Point_Modeling_CVPR_2022_paper.html"
+      },
+      {
+        year: 2022,
+        venue: "ECCV",
+        type: "点云/序列启发",
+        status: "结构化启发",
+        title: "Masked Autoencoders for Point Cloud Self-supervised Learning",
+        authors: "Yatian Pang et al.",
+        note: "Point-MAE 说明标准 Transformer/MAE 能学习点云局部 patch 表示；可迁移到 Gaussian 子集缺失、攻击后恢复和 watermark redundancy。",
+        tags: ["Point-MAE", "masked autoencoder", "point patches"],
+        url: "https://www.ecva.net/papers/eccv_2022/papers_ECCV/papers/136620591.pdf"
+      },
+      {
+        year: 2023,
+        venue: "SIGGRAPH",
+        type: "点云/序列启发",
+        status: "结构化启发",
+        title: "OctFormer: Octree-Based Transformers for 3D Point Clouds",
+        authors: "Peng-Shuai Wang et al.",
+        note: "八叉树把点云组织成层次序列，正好对应 3DGS canonical ordering 的一个可实现方向。",
+        tags: ["octree", "canonical ordering", "hierarchical transformer"],
+        url: "https://wang-ps.github.io/octformer"
+      }
+    ];
+
+    const timelineNotes = [
+      { year: "2018-2020", text: "深度图像水印/隐写成熟：HiDDeN、StegaStamp、Distortion Blind Deep Watermarking。" },
+      { year: "2023", text: "Stable Signature 把水印扎进扩散模型；CopyRNeRF 开始保护辐射场；3DGS 出现。" },
+      { year: "2024", text: "Gaussian Shading、LaWa、WaDiff 等生成式图像水印密集出现，WateRF 承接到辐射场。" },
+      { year: "2025", text: "GuardSplat、3D-GSW 进入 CVPR；ICCV 出现 SEAL、SpecGuard、TAG-WM 等更细粒度方案。" },
+      { year: "2026", text: "W2M、BitC-3DGS、VoMarkSplat 强调场景策略、容量和投票鲁棒性，3DGS 水印进入攻防细化阶段。" }
+    ];
+
+    const techTree = [
+      {
+        title: "A. 图像化 / Tensor 化：把 3DGS 变成 2D 可处理结构",
+        tag: "image-like",
+        focus: "Splatter Image 把 one Gaussian per pixel 变成 image-like 结构；MarkSplatter 再把已有无序 3DGS 通过 GaussianBridge 转成 Splatter Image，从而把 2D encoder-decoder、segmentation、attention 直接迁移过来。",
+        ideas: [
+          "水印可嵌在 image-like Gaussian tensor 中，而不是逐 Gaussian 手工优化。",
+          "可用 dense segmentation 方式从小目标渲染区域中恢复 message。",
+          "UVGS、latentSplat、Splatter-360 说明 2D/latent/全景结构都能成为 3DGS 的规则化外壳。"
+        ],
+        query: "Splatter Image|MarkSplatter|UVGS|latentSplat|Splatter-360",
+        papers: [
+          ["Splatter Image", "https://arxiv.org/abs/2312.13150"],
+          ["MarkSplatter", "https://arxiv.org/abs/2509.00757"],
+          ["UVGS", "https://openaccess.thecvf.com/content/CVPR2025/html/Rai_UVGS_Reimagining_Unstructured_3D_Gaussian_Splatting_using_UV_Mapping_CVPR_2025_paper.html"],
+          ["latentSplat", "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/11950_ECCV_2024_paper.php"],
+          ["Splatter-360", "https://openaccess.thecvf.com/content/CVPR2025/papers/Chen_Splatter-360_Generalizable_360_Gaussian_Splatting_for_Wide-baseline_Panoramic_Images_CVPR_2025_paper.pdf"]
+        ]
+      },
+      {
+        title: "B. 图结构化：把 Gaussian 关系变成稳定子图",
+        tag: "graph",
+        focus: "Gaussian 之间天然有空间邻近、尺度相似、共可见、遮挡前后、语义同属对象等关系。与其在单个 Gaussian 上写水印，不如找攻击后仍稳定的 Gaussian 子图。",
+        ideas: [
+          "构图边：kNN / overlap / co-visibility / occlusion / same-object affinity。",
+          "子图载体：高稳定性、高贡献、多视角一致的 Gaussian cluster。",
+          "图网络或 graph cut 可用于选择、扩散和恢复水印。"
+        ],
+        query: "GaussianCut|Gaussian Grouping|Segment Any 3D Gaussians|graph",
+        papers: [
+          ["GaussianCut", "https://proceedings.neurips.cc/paper_files/paper/2024/hash/a26f3dc32a913b77fa70c33ffa5dcb37-Abstract-Conference.html"],
+          ["Gaussian Grouping", "https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/04195.pdf"],
+          ["Segment Any 3D Gaussians", "https://arxiv.org/abs/2312.00860"],
+          ["Efficient Decoupled Feature 3DGS", "https://openaccess.thecvf.com/content/CVPR2025/html/Dai_Efficient_Decoupled_Feature_3D_Gaussian_Splatting_via_Hierarchical_Compression_CVPR_2025_paper.html"]
+        ]
+      },
+      {
+        title: "C. View-consistency：从跨视角稳定贡献找水印载体",
+        tag: "view-consistency",
+        focus: "稳定可见、跨视角贡献一致的 Gaussian 比只在单视角出现的 Gaussian 更适合作为承载区域。这个分支可以把可见性统计、render contribution、频域贡献和 policy-guided embedding 合起来。",
+        ideas: [
+          "对每个 Gaussian 统计 view coverage、alpha contribution、遮挡敏感性和渲染误差梯度。",
+          "选择“高贡献但低感知风险”的位置做 message redundancy。",
+          "W2M 的策略学习、3D-GSW 的频率引导和 GaussianMarker 的不确定性选择都可归入这个问题。"
+        ],
+        query: "view consistency|W2M|3D-GSW|GaussianMarker|GuardSplat",
+        papers: [
+          ["W2M", "https://openaccess.thecvf.com/content/CVPR2026/papers/Li_Write_Where_It_Matters_Policy-Guided_Watermarks_for_3D_Gaussian_Splatting_CVPR_2026_paper.pdf"],
+          ["3D-GSW", "https://openaccess.thecvf.com/content/CVPR2025/html/Jang_3D-GSW_3D_Gaussian_Splatting_for_Robust_Watermarking_CVPR_2025_paper.html"],
+          ["GaussianMarker", "https://proceedings.neurips.cc/paper_files/paper/2024/hash/39cee562b91611c16ac0b100f0bc1ea1-Abstract-Conference.html"],
+          ["GuardSplat", "https://openaccess.thecvf.com/content/CVPR2025/html/Chen_GuardSplat_Efficient_and_Robust_Watermarking_for_3D_Gaussian_Splatting_CVPR_2025_paper.html"]
+        ]
+      },
+      {
+        title: "D. Canonical ordering：把无序 3DGS 当序列处理",
+        tag: "canonical-order",
+        focus: "如果能用空间编码、八叉树、Morton/Hilbert curve 或 learnable sorting 建立稳定顺序，就可以把 Gaussian 变成 token sequence，借 NLP、Point Transformer、Point-BERT、Point-MAE 做 message-conditioned embedding。",
+        ideas: [
+          "序列 token 可包含 position、scale、rotation、opacity、SH、visibility descriptor。",
+          "水印可设计成序列冗余码、masked reconstruction 或 transformer conditioning。",
+          "关键是 ordering 在旋转、裁剪、压缩和重训练后尽量稳定。"
+        ],
+        query: "Point Transformer|Point-BERT|Point-MAE|OctFormer|canonical ordering",
+        papers: [
+          ["Point Transformer", "https://openaccess.thecvf.com/content/ICCV2021/html/Zhao_Point_Transformer_ICCV_2021_paper.html"],
+          ["Point-BERT", "https://openaccess.thecvf.com/content/CVPR2022/html/Yu_Point-BERT_Pre-Training_3D_Point_Cloud_Transformers_With_Masked_Point_Modeling_CVPR_2022_paper.html"],
+          ["Point-MAE", "https://www.ecva.net/papers/eccv_2022/papers_ECCV/papers/136620591.pdf"],
+          ["OctFormer", "https://wang-ps.github.io/octformer"]
+        ]
+      },
+      {
+        title: "E. Born-watermarked：把水印前移到 3DGS 生成模型内部",
+        tag: "born-watermarked",
+        focus: "如果目标是 AIGC 生成 3D 内容，水印不一定作为后处理写入 .ply，也可以进入生成模型 latent 或网络块，让生成出的 Gaussian 参数天然带 bit。",
+        ideas: [
+          "链路：文本/图像条件 -> 生成模型 latent -> Gaussian 参数 -> 渲染图像。",
+          "水印模块可以放在 latent、decoder block、Gaussian parameter head 或 renderer-aware loss。",
+          "GaussianSeal 是这条路线的直接例子，SplatFlow、GSGAN、MVSplat/pixelSplat 提供生成/前馈结构背景。"
+        ],
+        query: "GaussianSeal|SplatFlow|GSGAN|MVSplat|pixelSplat",
+        papers: [
+          ["GaussianSeal", "https://arxiv.org/abs/2503.00531"],
+          ["SplatFlow", "https://openaccess.thecvf.com/content/CVPR2025/html/Go_SplatFlow_Multi-View_Rectified_Flow_Model_for_3D_Gaussian_Splatting_Synthesis_CVPR_2025_paper.html"],
+          ["GSGAN", "https://proceedings.neurips.cc/paper_files/paper/2024/hash/7d90c28e7820709792d969211815a2b3-Abstract-Conference.html"],
+          ["MVSplat", "https://www.ecva.net/papers/eccv_2024/papers_ECCV/papers/03187.pdf"],
+          ["pixelSplat", "https://arxiv.org/abs/2312.12337"]
+        ]
+      },
+      {
+        title: "F. 攻击不变量：从攻击后保留下来的结构反推水印位置",
+        tag: "attack-invariant",
+        focus: "不要只凭经验选位置。先分析压缩、剪枝、重训练、2D/3D diffusion editing 后哪些属性仍稳定，再把水印嵌入这些不变量中。",
+        ideas: [
+          "diffusion editing 像低通滤波器：倾向保留低频/语义结构，重生成高频细节。",
+          "压缩和剪枝保留高贡献低冗余结构，可能破坏小权重或高频局部信号。",
+          "可把攻击模拟器变成载体评分器：survival score 越高，越适合承载冗余 message。"
+        ],
+        query: "RDSplat|CompMarkGS|BitC-3DGS|VoMarkSplat|Decoupling Defense",
+        papers: [
+          ["RDSplat", "https://arxiv.org/abs/2512.06774"],
+          ["CompMarkGS", "https://papers.cool/arxiv/2503.12836"],
+          ["BitC-3DGS", "https://arxiv.org/abs/2605.29583"],
+          ["VoMarkSplat", "https://www.sciencedirect.com/science/article/abs/pii/S0167865526000711"],
+          ["Decoupling Defense Strategies", "https://openaccess.thecvf.com/content/CVPR2026/papers/Chen_Decoupling_Defense_Strategies_for_Robust_Image_Watermarking_CVPR_2026_paper.pdf"]
+        ]
+      },
+      {
+        title: "G. 2D 方法迁移：把成熟图像水印模块嫁接到结构化 3DGS",
+        tag: "2d-transfer",
+        focus: "一旦 3DGS 被图像化、tensor 化或序列化，2D 图像水印中的 encoder-decoder、噪声层、attention、semantic mask、tamper localization 都可以成为可迁移模块。",
+        ideas: [
+          "HiDDeN/StegaStamp 提供基础 encoder-decoder 与失真层。",
+          "LaWa/Stable Signature/Gaussian Shading 提供生成过程和 latent watermark。",
+          "SEAL/TAG-WM/OmniGuard 提供语义、对象级和篡改定位启发。"
+        ],
+        query: "HiDDeN|StegaStamp|LaWa|Stable Signature|Gaussian Shading|SEAL|TAG-WM",
+        papers: [
+          ["HiDDeN", "https://openaccess.thecvf.com/content_ECCV_2018/html/Jiren_Zhu_HiDDeN_Hiding_Data_ECCV_2018_paper.html"],
+          ["StegaStamp", "https://openaccess.thecvf.com/content_CVPR_2020/html/Tancik_StegaStamp_Invisible_Hyperlinks_in_Physical_Photographs_CVPR_2020_paper.html"],
+          ["LaWa", "https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/12460_ECCV_2024_paper.php"],
+          ["SEAL", "https://openaccess.thecvf.com/content/ICCV2025/html/Arabi_SEAL_Semantic_Aware_Image_Watermarking_ICCV_2025_paper.html"],
+          ["TAG-WM", "https://openaccess.thecvf.com/content/ICCV2025/html/Chen_TAG-WM_Tamper-Aware_Generative_Image_Watermarking_via_Diffusion_Inversion_Sensitivity_ICCV_2025_paper.html"]
+        ]
+      }
+    ];
+
+    const priority = { "重点": 0, "最新": 1, "结构化启发": 2, "基础": 3, "攻击": 4, "相关": 5, "候选": 6 };
+    const codeLinks = {
+      "3D Gaussian Splatting for Real-Time Radiance Field Rendering": "https://github.com/graphdeco-inria/gaussian-splatting",
+      "3D-GSW: 3D Gaussian Splatting for Robust Watermarking": "https://github.com/kuai-lab/cvpr25_3D-GSW",
+      "GuardSplat: Efficient and Robust Watermarking for 3D Gaussian Splatting": "https://github.com/NarcissusEx/GuardSplat",
+      "MarkSplatter: Generalizable Watermarking for 3D Gaussian Splatting Model via Splatter Image Structure": "https://kevinhuangxf.github.io/marksplatter",
+      "WateRF: Robust Watermarks in Radiance Fields for Protection of Copyrights": "https://github.com/kuai-lab/cvpr2024_WateRF",
+      "The NeRF Signature: Codebook-Aided Watermarking for Neural Radiance Fields": "https://github.com/luo-ziyuan/NeRF_Signature",
+      "The Stable Signature: Rooting Watermarks in Latent Diffusion Models": "https://github.com/facebookresearch/stable_signature",
+      "Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models": "https://github.com/bsmhmmlf/Gaussian-Shading",
+      "LaWa: Using Latent Space for In-Generation Image Watermarking": "https://github.com/vbdi/LaWa",
+      "SEAL: Semantic Aware Image Watermarking": "https://github.com/Kasraarabi/SEAL",
+      "TAG-WM: Tamper-Aware Generative Image Watermarking via Diffusion Inversion Sensitivity": "https://github.com/Suchenl/TAG-WM",
+      "SpecGuard: Spectral Projection-based Advanced Invisible Watermarking": "https://github.com/inzamamulDU/SpecGuard_ICCV_2025",
+      "Semantic Watermarking Reinvented: Enhancing Robustness and Generation Quality with Fourier Integrity": "https://github.com/thomas11809/SFWMark",
+      "OmniGuard: Hybrid Manipulation Localization via Augmented Versatile Deep Image Watermarking": "https://github.com/xuanyuzhang21/OmniGuard",
+      "HiDDeN: Hiding Data with Deep Networks": "https://github.com/ando-khachatryan/HiDDeN",
+      "StegaStamp: Invisible Hyperlinks in Physical Photographs": "https://github.com/tancik/StegaStamp",
+      "A Watermark-Conditioned Diffusion Model for IP Protection": "https://github.com/rmin2000/WaDiff",
+      "Robust-Wide: Robust Watermarking against Instruction-driven Image Editing": "https://github.com/hurunyi/Robust-Wide",
+      "Certifiably Robust Image Watermark": "https://github.com/zhengyuan-jiang/Watermark-Library",
+      "Decoder Gradient Shield: Provable and High-Fidelity Prevention of Gradient-Based Box-Free Watermark Removal": "https://github.com/haonanAN309/CVPR-2025-Official-Implementation-Decoder-Gradient-Shield",
+      "Splatter Image: Ultra-Fast Single-View 3D Reconstruction": "https://github.com/szymanowiczs/splatter-image",
+      "Gaussian Grouping: Segment and Edit Anything in 3D Scenes": "https://github.com/lkeab/gaussian-grouping",
+      "GaussianCut: Interactive Segmentation via Graph Cut for 3D Gaussian Splatting": "https://umangi-jain.github.io/gaussiancut/",
+      "Segment Any 3D Gaussians": "https://jumpat.github.io/SAGA/",
+      "Point Transformer": "https://github.com/POSTECH-CVLab/point-transformer",
+      "Point-BERT: Pre-Training 3D Point Cloud Transformers With Masked Point Modeling": "https://github.com/Julie-tang00/Point-BERT",
+      "Masked Autoencoders for Point Cloud Self-supervised Learning": "https://github.com/Pang-Yatian/Point-MAE",
+      "OctFormer: Octree-Based Transformers for 3D Point Clouds": "https://github.com/octree-nn/octformer",
+      "MVSplat: Efficient 3D Gaussian Splatting from Sparse Multi-View Images": "https://github.com/donydchen/mvsplat",
+      "pixelSplat: 3D Gaussian Splats from Image Pairs for Scalable Generalizable 3D Reconstruction": "https://github.com/dcharatan/pixelsplat",
+      "COLMAP-Free 3D Gaussian Splatting": "https://github.com/NVlabs/CF-3DGS",
+      "Gaussian Splatting SLAM": "https://github.com/muskie82/MonoGS",
+      "Spacetime Gaussian Feature Splatting for Real-Time Dynamic View Synthesis": "https://github.com/oppo-us-research/SpacetimeGaussians",
+      "4D Gaussian Splatting for Real-Time Dynamic Scene Rendering": "https://github.com/hustvl/4DGaussians",
+      "MonoSplat: Generalizable 3D Gaussian Splatting from Monocular Depth Foundation Models": "https://github.com/CUHK-AIM-Group/MonoSplat"
+    };
+
+    const hasCode = (paper) => Boolean(codeLinks[paper.title]);
+    const effectiveStatus = (paper) => paper.status === "重点" && !hasCode(paper) ? "候选" : paper.status;
+    const treeCodeAliases = {
+      "3D-GSW": "3D-GSW: 3D Gaussian Splatting for Robust Watermarking",
+      "GuardSplat": "GuardSplat: Efficient and Robust Watermarking for 3D Gaussian Splatting",
+      "MarkSplatter": "MarkSplatter: Generalizable Watermarking for 3D Gaussian Splatting Model via Splatter Image Structure",
+      "WateRF": "WateRF: Robust Watermarks in Radiance Fields for Protection of Copyrights",
+      "NeRF Signature": "The NeRF Signature: Codebook-Aided Watermarking for Neural Radiance Fields",
+      "Stable Signature": "The Stable Signature: Rooting Watermarks in Latent Diffusion Models",
+      "Gaussian Shading": "Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models",
+      "TAG-WM": "TAG-WM: Tamper-Aware Generative Image Watermarking via Diffusion Inversion Sensitivity",
+      "SpecGuard": "SpecGuard: Spectral Projection-based Advanced Invisible Watermarking",
+      "OmniGuard": "OmniGuard: Hybrid Manipulation Localization via Augmented Versatile Deep Image Watermarking",
+      "Splatter Image": "Splatter Image: Ultra-Fast Single-View 3D Reconstruction",
+      "Gaussian Grouping": "Gaussian Grouping: Segment and Edit Anything in 3D Scenes",
+      "GaussianCut": "GaussianCut: Interactive Segmentation via Graph Cut for 3D Gaussian Splatting",
+      "SAGA": "Segment Any 3D Gaussians",
+      "Point-BERT": "Point-BERT: Pre-Training 3D Point Cloud Transformers With Masked Point Modeling",
+      "Point-MAE": "Masked Autoencoders for Point Cloud Self-supervised Learning",
+      "MVSplat": "MVSplat: Efficient 3D Gaussian Splatting from Sparse Multi-View Images",
+      "pixelSplat": "pixelSplat: 3D Gaussian Splats from Image Pairs for Scalable Generalizable 3D Reconstruction",
+      "HiDDeN": "HiDDeN: Hiding Data with Deep Networks",
+      "StegaStamp": "StegaStamp: Invisible Hyperlinks in Physical Photographs"
+    };
+
+    const treeCodeUrl = (label) => codeLinks[label] || codeLinks[treeCodeAliases[label]];
+    papers.sort((a, b) =>
+      (Number(hasCode(b)) - Number(hasCode(a))) ||
+      (b.year - a.year) ||
+      ((priority[effectiveStatus(a)] ?? 9) - (priority[effectiveStatus(b)] ?? 9)) ||
+      a.title.localeCompare(b.title)
+    );
+
+    const $ = (selector) => document.querySelector(selector);
+    const paperGrid = $("#paperGrid");
+    const search = $("#search");
+    const yearFilter = $("#yearFilter");
+    const typeFilter = $("#typeFilter");
+    const venueFilter = $("#venueFilter");
+    const codeFilter = $("#codeFilter");
+
+    function option(label, value = label) {
+      const node = document.createElement("option");
+      node.value = value;
+      node.textContent = label;
+      return node;
+    }
+
+    function setupFilters() {
+      yearFilter.append(option("全部年份", ""));
+      [...new Set(papers.map(p => p.year))].sort((a, b) => b - a).forEach(y => yearFilter.append(option(String(y))));
+
+      typeFilter.append(option("全部技术类型", ""));
+      [...new Set(papers.map(p => p.type))].sort((a, b) => a.localeCompare(b, "zh-CN")).forEach(t => typeFilter.append(option(t)));
+
+      venueFilter.append(option("全部会议/来源", ""));
+      [...new Set(papers.map(p => p.venue))].sort().forEach(v => venueFilter.append(option(v)));
+
+      codeFilter.append(option("全部代码状态", ""));
+      codeFilter.append(option("只看可复现代码", "code"));
+      codeFilter.append(option("只看未确认代码", "no-code"));
+    }
+
+    function badgeClass(status) {
+      if (status === "重点") return "core";
+      if (status === "最新") return "new";
+      if (status === "攻击") return "attack";
+      if (status === "结构化启发") return "struct";
+      if (status === "候选") return "candidate";
+      return "";
+    }
+
+    function renderTechTree() {
+      const container = $("#techTree");
+      container.innerHTML = techTree.map((branch, index) => `
+        <article class="branch">
+          <span class="branch-index">${String(index + 1).padStart(2, "0")}</span>
+          <div class="branch-head">
+            <h3>${branch.title}</h3>
+            <span class="badge struct">${branch.tag}</span>
+          </div>
+          <p>${branch.focus}</p>
+          <ul>${branch.ideas.map(item => `<li>${item}</li>`).join("")}</ul>
+          <div class="branch-links">
+            <button class="branch-filter" type="button" data-query="${branch.query}">筛选论文库</button>
+            ${branch.papers.map(([label, url]) => {
+              const reproducible = Boolean(treeCodeUrl(label));
+              return `<a class="tree-paper ${reproducible ? "has-code" : "no-tree-code"}" href="${url}" target="_blank" rel="noreferrer">${label}<span class="mini-code ${reproducible ? "" : "missing"}">${reproducible ? "Code" : "未确认"}</span></a>`;
+            }).join("")}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderPapers() {
+      const term = search.value.trim().toLowerCase();
+      const year = yearFilter.value;
+      const type = typeFilter.value;
+      const venue = venueFilter.value;
+      const code = codeFilter.value;
+
+      const filtered = papers.filter(p => {
+        const hay = [p.title, p.authors, p.year, p.venue, p.type, p.status, p.note, ...p.tags].join(" ").toLowerCase();
+        const termMatch = !term || (
+          term.includes("|")
+            ? term.split("|").map(t => t.trim()).filter(Boolean).some(t => hay.includes(t))
+            : term.split(/\s+/).filter(Boolean).every(t => hay.includes(t))
+        );
+        return termMatch &&
+          (!year || String(p.year) === year) &&
+          (!type || p.type === type) &&
+          (!venue || p.venue === venue) &&
+          (!code || (code === "code" ? hasCode(p) : !hasCode(p)));
+      });
+
+      paperGrid.innerHTML = filtered.map(p => `
+        <article class="paper ${p.type === "3DGS 水印" ? "focus" : ""} ${hasCode(p) ? "repro" : "no-code"}">
+          <div class="paper-head">
+            <h3>${p.title}</h3>
+            <div class="paper-meta">
+              <span class="code-badge ${hasCode(p) ? "" : "missing"}">${hasCode(p) ? "Code" : "No code"}</span>
+              <span class="badge ${badgeClass(effectiveStatus(p))}">${effectiveStatus(p)}</span>
+            </div>
+          </div>
+          <div class="paper-meta">
+            <span class="pill">${p.year}</span>
+            <span class="pill">${p.venue}</span>
+            <span class="pill">${p.type}</span>
+          </div>
+          <p><strong>${p.authors}</strong></p>
+          <p>${p.note}</p>
+          <div class="paper-meta">${p.tags.map(t => `<span class="pill">${t}</span>`).join("")}</div>
+          <div class="branch-links">
+            <a href="${p.url}" target="_blank" rel="noreferrer">论文来源</a>
+            ${hasCode(p) ? `<a href="${codeLinks[p.title]}" target="_blank" rel="noreferrer">可复现代码</a>` : ""}
+          </div>
+        </article>
+      `).join("");
+
+      const codeCount = filtered.filter(hasCode).length;
+      $("#resultCount").textContent = `当前显示 ${filtered.length} / ${papers.length} 篇，其中 ${codeCount} 篇有可复现代码`;
+    }
+
+    function renderTimeline() {
+      $("#timeline").innerHTML = timelineNotes.map(item => `
+        <div class="year-col">
+          <strong>${item.year}</strong>
+          <p>${item.text}</p>
+        </div>
+      `).join("");
+    }
+
+    function drawMap() {
+      const canvas = $("#mapCanvas");
+      const ctx = canvas.getContext("2d");
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const w = rect.width;
+      const h = rect.height;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#fbfaf6";
+      ctx.fillRect(0, 0, w, h);
+
+      const years = [2018, 2020, 2023, 2024, 2025, 2026];
+      const types = [
+        { key: "二维图像水印", color: "#2457a6", y: .18 },
+        { key: "生成式图像水印", color: "#0b776f", y: .34 },
+        { key: "NeRF/辐射场水印", color: "#b7791f", y: .52 },
+        { key: "3DGS 水印", color: "#a6423b", y: .68 },
+        { key: "3DGS 基础技术", color: "#347a46", y: .84 }
+      ];
+
+      ctx.strokeStyle = "#ded8cc";
+      ctx.lineWidth = 1;
+      years.forEach((year, i) => {
+        const x = 48 + i * ((w - 92) / (years.length - 1));
+        ctx.beginPath();
+        ctx.moveTo(x, 34);
+        ctx.lineTo(x, h - 36);
+        ctx.stroke();
+        ctx.fillStyle = "#62685f";
+        ctx.font = "12px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(year, x, h - 15);
+      });
+
+      types.forEach(t => {
+        const y = h * t.y;
+        ctx.strokeStyle = "#e7e2d8";
+        ctx.beginPath();
+        ctx.moveTo(22, y);
+        ctx.lineTo(w - 18, y);
+        ctx.stroke();
+        ctx.fillStyle = t.color;
+        ctx.textAlign = "left";
+        ctx.font = "12px Inter, sans-serif";
+        ctx.fillText(t.key, 22, y - 7);
+      });
+
+      const maxCount = Math.max(...years.flatMap(y => types.map(t => papers.filter(p => p.year === y && p.type === t.key).length)));
+      years.forEach((year, i) => {
+        const x = 48 + i * ((w - 92) / (years.length - 1));
+        types.forEach(t => {
+          const count = papers.filter(p => p.year === year && p.type === t.key).length;
+          if (!count) return;
+          const radius = 5 + (count / maxCount) * 22;
+          const y = h * t.y;
+          ctx.fillStyle = t.color + "cc";
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fffdfa";
+          ctx.font = "700 12px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(count, x, y);
+        });
+      });
+    }
+
+    setupFilters();
+    renderTimeline();
+    renderTechTree();
+    renderPapers();
+    drawMap();
+    $("#paperTotal").textContent = papers.length;
+
+    [search, yearFilter, typeFilter, venueFilter, codeFilter].forEach(el => el.addEventListener("input", renderPapers));
+    $("#techTree").addEventListener("click", (event) => {
+      const button = event.target.closest(".branch-filter");
+      if (!button) return;
+      search.value = button.dataset.query;
+      yearFilter.value = "";
+      typeFilter.value = "";
+      venueFilter.value = "";
+      codeFilter.value = "";
+      renderPapers();
+      $("#papers").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    window.addEventListener("resize", drawMap);
+  </script>
+</body>
+</html>
